@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Leaf, TrendingUp, Settings, LogOut, AlertCircle } from "lucide-react";
+import { Leaf, TrendingUp, LogOut, AlertCircle, Users } from "lucide-react";
 
 interface Goal {
   id: string;
@@ -135,6 +135,14 @@ const Dashboard = () => {
             </div>
           </div>
           <div className="flex items-center gap-2">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => navigate("/friends")}
+              title="Friend Support"
+            >
+              <Users className="h-5 w-5" />
+            </Button>
             <Button
               variant="ghost"
               size="icon"
