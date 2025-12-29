@@ -1,0 +1,4 @@
+project_id = "lvpzomyzsfraepjimsrb"
+
+[functions.generate-reappraisal]
+verify_jwt = false
