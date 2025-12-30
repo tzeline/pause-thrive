@@ -3,10 +3,18 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Leaf, Wind, Target, Sparkles, Heart, ArrowRight, X, Check, Minus } from "lucide-react";
+import { Leaf, Wind, Target, Sparkles, Heart, ArrowRight, X, Check, Minus, Users } from "lucide-react";
+import { MicroLearningCard } from "@/components/MicroLearningCard";
+import { getRandomMicroLearning, MicroLearning } from "@/lib/microLearning";
 
-const STEPS = ["pause", "goal", "reappraisal", "alternative", "reflect"] as const;
+const STEPS = ["pause", "goal", "reappraisal", "friend_message", "alternative", "reflect"] as const;
 type Step = typeof STEPS[number];
+
+interface FriendMessage {
+  id: string;
+  friend_name: string;
+  message: string;
+}
 
 const Emergency = () => {
   const { user, loading } = useAuth();
@@ -16,14 +24,19 @@ const Emergency = () => {
   const [pattern, setPattern] = useState<{ desired_alternative: string } | null>(null);
   const [reappraisal, setReappraisal] = useState<string>("");
   const [isLoadingAI, setIsLoadingAI] = useState(false);
-  const [sessionId, setSessionId] = useState<string | null>(null);
+  const [friendMessage, setFriendMessage] = useState<FriendMessage | null>(null);
+  const [shownFriendMessageId, setShownFriendMessageId] = useState<string | null>(null);
+  const [microLearning, setMicroLearning] = useState<MicroLearning | null>(null);
 
   useEffect(() => {
     if (!loading && !user) navigate("/auth");
   }, [user, loading, navigate]);
 
   useEffect(() => {
-    if (user) fetchGoalAndPattern();
+    if (user) {
+      fetchGoalAndPattern();
+      fetchRandomFriendMessage();
+    }
   }, [user]);
 
   const fetchGoalAndPattern = async () => {
@@ -33,6 +46,19 @@ const Emergency = () => {
       setGoal(goals[0]);
       const { data: patterns } = await supabase.from("temptation_patterns").select("desired_alternative").eq("goal_id", goals[0].id).limit(1);
       if (patterns?.[0]) setPattern(patterns[0]);
+    }
+  };
+
+  const fetchRandomFriendMessage = async () => {
+    if (!user) return;
+    const { data: messages } = await supabase
+      .from("friend_messages")
+      .select("id, friend_name, message")
+      .eq("user_id", user.id);
+    
+    if (messages && messages.length > 0) {
+      const randomMsg = messages[Math.floor(Math.random() * messages.length)];
+      setFriendMessage(randomMsg);
     }
   };
 
@@ -54,20 +80,78 @@ const Emergency = () => {
   const nextStep = async () => {
     const currentIndex = STEPS.indexOf(step);
     if (currentIndex < STEPS.length - 1) {
-      const next = STEPS[currentIndex + 1];
+      let next = STEPS[currentIndex + 1];
+      
+      // Skip friend_message step if no messages available
+      if (next === "friend_message" && !friendMessage) {
+        next = STEPS[currentIndex + 2];
+      }
+      
       setStep(next);
       if (next === "reappraisal") generateReappraisal();
+      if (next === "friend_message" && friendMessage) {
+        setShownFriendMessageId(friendMessage.id);
+      }
     }
   };
 
   const handleOutcome = async (outcome: "resisted" | "gave_in" | "partially_resisted") => {
     if (!user || !goal) return;
-    await supabase.from("emergency_sessions").insert({ user_id: user.id, goal_id: goal.id, outcome, ai_reappraisal: reappraisal || null });
+    await supabase.from("emergency_sessions").insert({ 
+      user_id: user.id, 
+      goal_id: goal.id, 
+      outcome, 
+      ai_reappraisal: reappraisal || null,
+      friend_message_shown: shownFriendMessageId,
+    });
+    
+    // Show micro-learning after completing flow (50% chance)
+    if (Math.random() > 0.5) {
+      const { data: viewedLearnings } = await supabase
+        .from("micro_learning_views")
+        .select("learning_id")
+        .eq("user_id", user.id);
+      
+      const viewedIds = viewedLearnings?.map(v => v.learning_id) || [];
+      const learning = getRandomMicroLearning(viewedIds);
+      if (learning) {
+        setMicroLearning(learning);
+        return; // Don't navigate yet
+      }
+    }
+    
+    navigate("/dashboard");
+  };
+
+  const dismissMicroLearning = () => {
+    setMicroLearning(null);
     navigate("/dashboard");
   };
 
   if (loading || !user) {
     return <div className="flex min-h-screen items-center justify-center gradient-calm"><div className="animate-breathe"><Leaf className="h-12 w-12 text-primary" /></div></div>;
+  }
+
+  // Show micro-learning after completing the flow
+  if (microLearning) {
+    return (
+      <div className="min-h-screen gradient-calm">
+        <div className="flex flex-col min-h-screen px-6 py-8">
+          <div className="flex-1 flex flex-col items-center justify-center max-w-md mx-auto w-full">
+            <div className="w-full mb-6">
+              <MicroLearningCard
+                learning={microLearning}
+                userId={user.id}
+                onDismiss={dismissMicroLearning}
+              />
+            </div>
+            <Button onClick={dismissMicroLearning}>
+              Return to Dashboard
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -97,6 +181,20 @@ const Emergency = () => {
               <div className="w-20 h-20 rounded-full bg-highlight/10 flex items-center justify-center mx-auto"><Sparkles className="h-10 w-10 text-highlight" /></div>
               {isLoadingAI ? <div className="animate-pulse"><p className="text-muted-foreground">Preparing a thought for you...</p></div> : <div className="p-6 rounded-2xl bg-card border border-border/50 shadow-soft"><p className="text-lg text-foreground leading-relaxed">{reappraisal}</p></div>}
               <Button size="lg" className="w-full" onClick={nextStep} disabled={isLoadingAI}>Continue<ArrowRight className="h-4 w-4 ml-2" /></Button>
+            </div>
+          )}
+
+          {step === "friend_message" && friendMessage && (
+            <div className="text-center space-y-8 animate-float-up">
+              <div className="w-20 h-20 rounded-full bg-accent/10 flex items-center justify-center mx-auto"><Users className="h-10 w-10 text-accent" /></div>
+              <div>
+                <p className="text-sm text-muted-foreground mb-2">A message from someone who cares:</p>
+                <div className="p-6 rounded-2xl bg-card border border-border/50 shadow-soft">
+                  <p className="text-lg text-foreground leading-relaxed italic">"{friendMessage.message}"</p>
+                  <p className="text-sm text-muted-foreground mt-4">— {friendMessage.friend_name}</p>
+                </div>
+              </div>
+              <Button size="lg" className="w-full" onClick={nextStep}>Continue<ArrowRight className="h-4 w-4 ml-2" /></Button>
             </div>
           )}
 

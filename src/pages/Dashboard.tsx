@@ -3,7 +3,10 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Leaf, TrendingUp, LogOut, AlertCircle, Users } from "lucide-react";
+import { Leaf, TrendingUp, LogOut, AlertCircle, Users, Sparkles, Beaker, Calendar } from "lucide-react";
+import { PilotBanner } from "@/components/PilotBanner";
+import { MicroLearningCard } from "@/components/MicroLearningCard";
+import { getRandomMicroLearning, MicroLearning } from "@/lib/microLearning";
 
 interface Goal {
   id: string;
@@ -17,12 +20,20 @@ interface Stats {
   currentStreak: number;
 }
 
+interface ActiveExperiment {
+  id: string;
+  title: string;
+}
+
 const Dashboard = () => {
   const { user, loading, signOut } = useAuth();
   const navigate = useNavigate();
   const [goal, setGoal] = useState<Goal | null>(null);
   const [stats, setStats] = useState<Stats>({ totalSessions: 0, resistedCount: 0, currentStreak: 0 });
   const [displayName, setDisplayName] = useState<string>("");
+  const [showPilotBanner, setShowPilotBanner] = useState(true);
+  const [microLearning, setMicroLearning] = useState<MicroLearning | null>(null);
+  const [activeExperiment, setActiveExperiment] = useState<ActiveExperiment | null>(null);
 
   useEffect(() => {
     if (!loading && !user) {
@@ -103,6 +114,31 @@ const Dashboard = () => {
         currentStreak: streak,
       });
     }
+
+    // Fetch active experiment
+    const { data: experiments } = await supabase
+      .from("experiments")
+      .select("id, title")
+      .eq("user_id", user.id)
+      .eq("status", "active")
+      .limit(1);
+
+    if (experiments?.[0]) {
+      setActiveExperiment(experiments[0]);
+    }
+
+    // Fetch viewed micro-learnings to show a new one occasionally
+    const { data: viewedLearnings } = await supabase
+      .from("micro_learning_views")
+      .select("learning_id")
+      .eq("user_id", user.id);
+
+    const viewedIds = viewedLearnings?.map(v => v.learning_id) || [];
+    // Show micro-learning occasionally (50% chance if not all viewed)
+    if (Math.random() > 0.5) {
+      const learning = getRandomMicroLearning(viewedIds);
+      setMicroLearning(learning);
+    }
   };
 
   const handleSignOut = async () => {
@@ -124,7 +160,7 @@ const Dashboard = () => {
     <div className="min-h-screen gradient-calm">
       <div className="flex flex-col min-h-screen px-6 py-8">
         {/* Header */}
-        <div className="flex items-center justify-between mb-8">
+        <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
               <Leaf className="h-5 w-5 text-primary" />
@@ -134,7 +170,23 @@ const Dashboard = () => {
               <p className="font-medium text-foreground">{displayName}</p>
             </div>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => navigate("/weekly-insight")}
+              title="Weekly Insight"
+            >
+              <Calendar className="h-5 w-5" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => navigate("/experiments")}
+              title="Experiments"
+            >
+              <Beaker className="h-5 w-5" />
+            </Button>
             <Button
               variant="ghost"
               size="icon"
@@ -159,6 +211,41 @@ const Dashboard = () => {
             </Button>
           </div>
         </div>
+
+        {/* Pilot Banner */}
+        {showPilotBanner && (
+          <div className="mb-6 max-w-md mx-auto w-full">
+            <PilotBanner userId={user.id} onDismiss={() => setShowPilotBanner(false)} />
+          </div>
+        )}
+
+        {/* Active Experiment Reminder */}
+        {activeExperiment && (
+          <div 
+            className="mb-6 max-w-md mx-auto w-full p-4 rounded-xl bg-primary/5 border border-primary/20 cursor-pointer hover:bg-primary/10 transition-colors animate-float-up"
+            onClick={() => navigate("/experiments")}
+          >
+            <div className="flex items-center gap-3">
+              <Beaker className="h-5 w-5 text-primary" />
+              <div className="flex-1">
+                <p className="text-sm text-foreground font-medium">Active experiment</p>
+                <p className="text-xs text-muted-foreground">{activeExperiment.title}</p>
+              </div>
+              <Sparkles className="h-4 w-4 text-highlight" />
+            </div>
+          </div>
+        )}
+
+        {/* Micro-Learning Card */}
+        {microLearning && (
+          <div className="mb-6 max-w-md mx-auto w-full">
+            <MicroLearningCard
+              learning={microLearning}
+              userId={user.id}
+              onDismiss={() => setMicroLearning(null)}
+            />
+          </div>
+        )}
 
         {/* Main Content */}
         <div className="flex-1 flex flex-col items-center justify-center">
@@ -207,8 +294,19 @@ const Dashboard = () => {
           </div>
         </div>
 
+        {/* Weekly Insight Prompt */}
+        <div 
+          className="text-center py-4 animate-float-up delay-400 cursor-pointer"
+          onClick={() => navigate("/weekly-insight")}
+        >
+          <div className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors">
+            <Sparkles className="h-4 w-4 text-highlight" />
+            <span>View your weekly insight</span>
+          </div>
+        </div>
+
         {/* Encouraging Message */}
-        <div className="text-center py-6 animate-float-up delay-400">
+        <div className="text-center pb-4 animate-float-up delay-400">
           <p className="text-sm text-muted-foreground italic">
             "Every pause is a step forward."
           </p>

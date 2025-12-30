@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Leaf, ArrowLeft, Copy, Check, Heart, Trash2, Send } from "lucide-react";
 import { toast } from "sonner";
+import { MessageReaction } from "@/components/MessageReaction";
 
 interface FriendMessage {
   id: string;
@@ -15,11 +16,16 @@ interface FriendMessage {
   created_at: string;
 }
 
+interface MessageReactionRecord {
+  message_id: string;
+}
+
 const Friends = () => {
   const { user, loading } = useAuth();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const [messages, setMessages] = useState<FriendMessage[]>([]);
+  const [reactions, setReactions] = useState<Set<string>>(new Set());
   const [copied, setCopied] = useState(false);
   const [isSubmitMode, setIsSubmitMode] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -47,6 +53,7 @@ const Friends = () => {
   useEffect(() => {
     if (user && !isSubmitMode) {
       fetchMessages();
+      fetchReactions();
     }
   }, [user, isSubmitMode]);
 
@@ -73,6 +80,18 @@ const Friends = () => {
 
     if (data) {
       setMessages(data);
+    }
+  };
+
+  const fetchReactions = async () => {
+    if (!user) return;
+    const { data } = await supabase
+      .from("message_reactions")
+      .select("message_id")
+      .eq("user_id", user.id);
+    
+    if (data) {
+      setReactions(new Set(data.map((r: MessageReactionRecord) => r.message_id)));
     }
   };
 
@@ -294,6 +313,14 @@ const Friends = () => {
                       <p className="text-sm text-muted-foreground mt-2">
                         — {msg.friend_name}
                       </p>
+                      {/* Reaction buttons */}
+                      <MessageReaction
+                        messageId={msg.id}
+                        userId={user.id}
+                        friendName={msg.friend_name}
+                        hasReacted={reactions.has(msg.id)}
+                        onReact={() => setReactions(new Set([...reactions, msg.id]))}
+                      />
                     </div>
                     <Button
                       variant="ghost"
