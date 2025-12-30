@@ -55,6 +55,39 @@ export type Database = {
           },
         ]
       }
+      experiments: {
+        Row: {
+          completed_at: string | null
+          created_at: string
+          description: string | null
+          id: string
+          started_at: string
+          status: string
+          title: string
+          user_id: string
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          started_at?: string
+          status?: string
+          title: string
+          user_id: string
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          started_at?: string
+          status?: string
+          title?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       friend_messages: {
         Row: {
           created_at: string
@@ -112,11 +145,98 @@ export type Database = {
         }
         Relationships: []
       }
+      message_reactions: {
+        Row: {
+          appreciation_message: string | null
+          created_at: string
+          id: string
+          message_id: string
+          notify_friend: boolean | null
+          reaction_type: string
+          user_id: string
+        }
+        Insert: {
+          appreciation_message?: string | null
+          created_at?: string
+          id?: string
+          message_id: string
+          notify_friend?: boolean | null
+          reaction_type: string
+          user_id: string
+        }
+        Update: {
+          appreciation_message?: string | null
+          created_at?: string
+          id?: string
+          message_id?: string
+          notify_friend?: boolean | null
+          reaction_type?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "message_reactions_message_id_fkey"
+            columns: ["message_id"]
+            isOneToOne: false
+            referencedRelation: "friend_messages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      micro_learning_views: {
+        Row: {
+          id: string
+          learning_id: string
+          user_id: string
+          viewed_at: string
+        }
+        Insert: {
+          id?: string
+          learning_id: string
+          user_id: string
+          viewed_at?: string
+        }
+        Update: {
+          id?: string
+          learning_id?: string
+          user_id?: string
+          viewed_at?: string
+        }
+        Relationships: []
+      }
+      pilot_feedback: {
+        Row: {
+          created_at: string
+          feature: string
+          feedback_text: string | null
+          helpful: boolean | null
+          id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          feature: string
+          feedback_text?: string | null
+          helpful?: boolean | null
+          id?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          feature?: string
+          feedback_text?: string | null
+          helpful?: boolean | null
+          id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           created_at: string
           display_name: string | null
           id: string
+          notification_preferences: Json | null
           onboarding_completed: boolean
           updated_at: string
         }
@@ -124,6 +244,7 @@ export type Database = {
           created_at?: string
           display_name?: string | null
           id: string
+          notification_preferences?: Json | null
           onboarding_completed?: boolean
           updated_at?: string
         }
@@ -131,6 +252,7 @@ export type Database = {
           created_at?: string
           display_name?: string | null
           id?: string
+          notification_preferences?: Json | null
           onboarding_completed?: boolean
           updated_at?: string
         }
@@ -173,6 +295,54 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      weekly_insights: {
+        Row: {
+          awareness_signs: string | null
+          created_at: string
+          generated_at: string
+          id: string
+          patterns: string | null
+          resisted_count: number | null
+          sessions_count: number | null
+          strengths: string | null
+          suggestion: string | null
+          user_id: string
+          viewed_at: string | null
+          week_end: string
+          week_start: string
+        }
+        Insert: {
+          awareness_signs?: string | null
+          created_at?: string
+          generated_at?: string
+          id?: string
+          patterns?: string | null
+          resisted_count?: number | null
+          sessions_count?: number | null
+          strengths?: string | null
+          suggestion?: string | null
+          user_id: string
+          viewed_at?: string | null
+          week_end: string
+          week_start: string
+        }
+        Update: {
+          awareness_signs?: string | null
+          created_at?: string
+          generated_at?: string
+          id?: string
+          patterns?: string | null
+          resisted_count?: number | null
+          sessions_count?: number | null
+          strengths?: string | null
+          suggestion?: string | null
+          user_id?: string
+          viewed_at?: string | null
+          week_end?: string
+          week_start?: string
+        }
+        Relationships: []
       }
     }
     Views: {
