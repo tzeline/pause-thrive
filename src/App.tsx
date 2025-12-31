@@ -13,6 +13,7 @@ import Progress from "./pages/Progress";
 import Friends from "./pages/Friends";
 import WeeklyInsight from "./pages/WeeklyInsight";
 import Experiments from "./pages/Experiments";
+import Goals from "./pages/Goals";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -34,6 +35,7 @@ const App = () => (
             <Route path="/friends" element={<Friends />} />
             <Route path="/weekly-insight" element={<WeeklyInsight />} />
             <Route path="/experiments" element={<Experiments />} />
+            <Route path="/goals" element={<Goals />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>

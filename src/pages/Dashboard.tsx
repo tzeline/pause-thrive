@@ -251,9 +251,15 @@ const Dashboard = () => {
         <div className="flex-1 flex flex-col items-center justify-center">
           {/* Goal Reminder */}
           {goal && (
-            <div className="w-full max-w-sm mb-8 animate-float-up">
-              <div className="p-5 rounded-2xl bg-card border border-border/50 shadow-soft">
-                <p className="text-sm text-muted-foreground mb-2">Your goal:</p>
+            <div 
+              className="w-full max-w-sm mb-8 animate-float-up cursor-pointer group"
+              onClick={() => navigate("/goals")}
+            >
+              <div className="p-5 rounded-2xl bg-card border border-border/50 shadow-soft group-hover:border-primary/30 transition-colors">
+                <div className="flex items-center justify-between mb-2">
+                  <p className="text-sm text-muted-foreground">Your goal:</p>
+                  <p className="text-xs text-muted-foreground group-hover:text-primary transition-colors">Tap to edit</p>
+                </div>
                 <p className="font-display text-xl text-foreground">{goal.title}</p>
                 {goal.why_it_matters && (
                   <p className="text-sm text-muted-foreground mt-2 italic">
