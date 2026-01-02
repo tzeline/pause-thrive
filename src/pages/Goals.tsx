@@ -149,10 +149,12 @@ const Goals = () => {
         title: "Changes saved",
         description: "Your goal has been updated.",
       });
+      navigate("/dashboard");
     } catch (error: any) {
+      console.error("Error saving goal:", error);
       toast({
-        title: "Error saving",
-        description: error.message,
+        title: "Changes couldn't be saved right now",
+        description: "Please try again. Your data is safe.",
         variant: "destructive",
       });
     } finally {
@@ -185,9 +187,10 @@ const Goals = () => {
 
       navigate("/onboarding");
     } catch (error: any) {
+      console.error("Error resetting goal:", error);
       toast({
-        title: "Error resetting",
-        description: error.message,
+        title: "Couldn't reset right now",
+        description: "Please try again in a moment.",
         variant: "destructive",
       });
     } finally {

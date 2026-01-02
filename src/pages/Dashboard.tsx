@@ -9,6 +9,8 @@ import { MicroLearningCard } from "@/components/MicroLearningCard";
 import { getRandomMicroLearning, MicroLearning } from "@/lib/microLearning";
 import { usePauseLimit } from "@/hooks/usePauseLimit";
 import { PauseUsageIndicator } from "@/components/PauseUsageIndicator";
+import { SafetyFooter } from "@/components/SafetyFooter";
+import { FullPageLoading } from "@/components/LoadingSpinner";
 
 interface Goal {
   id: string;
@@ -151,13 +153,7 @@ const Dashboard = () => {
   };
 
   if (loading || !user) {
-    return (
-      <div className="flex min-h-screen items-center justify-center gradient-calm">
-        <div className="animate-breathe">
-          <Leaf className="h-12 w-12 text-primary" />
-        </div>
-      </div>
-    );
+    return <FullPageLoading />;
   }
 
   return (
@@ -325,11 +321,14 @@ const Dashboard = () => {
         </div>
 
         {/* Encouraging Message */}
-        <div className="text-center pb-4 animate-float-up delay-400">
+        <div className="text-center pb-2 animate-float-up delay-400">
           <p className="text-sm text-muted-foreground italic">
             "Every pause is a step forward."
           </p>
         </div>
+
+        {/* Safety Footer */}
+        <SafetyFooter className="pb-4 pt-2" />
       </div>
     </div>
   );

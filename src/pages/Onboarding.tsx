@@ -7,7 +7,9 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { Leaf, Target, Lightbulb, ArrowRight, Check } from "lucide-react";
+import { Target, Lightbulb, ArrowRight, Check } from "lucide-react";
+import { FullPageLoading } from "@/components/LoadingSpinner";
+import { SafetyFooter } from "@/components/SafetyFooter";
 
 const Onboarding = () => {
   const { user, loading } = useAuth();
@@ -100,9 +102,10 @@ const Onboarding = () => {
 
       navigate("/dashboard");
     } catch (error: any) {
+      console.error("Onboarding error:", error);
       toast({
-        title: "Something went wrong",
-        description: error.message,
+        title: "Something didn't save right now",
+        description: "Please try again. Your progress won't be lost.",
         variant: "destructive",
       });
     } finally {
@@ -111,13 +114,7 @@ const Onboarding = () => {
   };
 
   if (loading || !user) {
-    return (
-      <div className="flex min-h-screen items-center justify-center gradient-calm">
-        <div className="animate-breathe">
-          <Leaf className="h-12 w-12 text-primary" />
-        </div>
-      </div>
-    );
+    return <FullPageLoading />;
   }
 
   return (

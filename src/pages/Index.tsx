@@ -3,6 +3,8 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Leaf, Heart, Shield, Sparkles } from "lucide-react";
+import { SafetyFooter } from "@/components/SafetyFooter";
+import { FullPageLoading } from "@/components/LoadingSpinner";
 
 const Index = () => {
   const { user, loading } = useAuth();
@@ -15,13 +17,7 @@ const Index = () => {
   }, [user, loading, navigate]);
 
   if (loading) {
-    return (
-      <div className="flex min-h-screen items-center justify-center gradient-calm">
-        <div className="animate-breathe">
-          <Leaf className="h-12 w-12 text-primary" />
-        </div>
-      </div>
-    );
+    return <FullPageLoading />;
   }
 
   return (
@@ -81,6 +77,9 @@ const Index = () => {
               </button>
             </p>
           </div>
+
+          {/* Safety Footer */}
+          <SafetyFooter className="pt-8" />
         </div>
       </div>
 

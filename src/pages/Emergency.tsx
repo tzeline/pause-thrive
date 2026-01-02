@@ -3,11 +3,13 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Leaf, Wind, Target, Sparkles, Heart, ArrowRight, X, Check, Minus, Users } from "lucide-react";
+import { Wind, Target, Sparkles, Heart, ArrowRight, X, Check, Minus, Users } from "lucide-react";
 import { MicroLearningCard } from "@/components/MicroLearningCard";
 import { getRandomMicroLearning, MicroLearning } from "@/lib/microLearning";
 import { usePauseLimit } from "@/hooks/usePauseLimit";
 import { PauseLimitReached } from "@/components/PauseLimitReached";
+import { FullPageLoading } from "@/components/LoadingSpinner";
+import { SafetyFooter } from "@/components/SafetyFooter";
 
 const STEPS = ["pause", "goal", "reappraisal", "friend_message", "alternative", "reflect"] as const;
 type Step = typeof STEPS[number];
@@ -147,7 +149,7 @@ const Emergency = () => {
   };
 
   if (loading || pauseLoading || !user) {
-    return <div className="flex min-h-screen items-center justify-center gradient-calm"><div className="animate-breathe"><Leaf className="h-12 w-12 text-primary" /></div></div>;
+    return <FullPageLoading />;
   }
 
   // Show limit reached screen if user has hit their limit and hasn't consumed a pause yet
@@ -240,6 +242,13 @@ const Emergency = () => {
               <p className="text-sm text-muted-foreground">No judgment—every attempt counts.</p>
             </div>
           )}
+
+          {/* Crisis support link - always visible during emergency flow */}
+          <SafetyFooter 
+            className="mt-8" 
+            showDisclaimer={false} 
+            showCrisisLink={true} 
+          />
         </div>
       </div>
     </div>

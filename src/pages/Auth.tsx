@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { Leaf, ArrowLeft, Mail, Lock, User } from "lucide-react";
 import { z } from "zod";
+import { FullPageLoading } from "@/components/LoadingSpinner";
 
 const emailSchema = z.string().email("Please enter a valid email address");
 const passwordSchema = z.string().min(6, "Password must be at least 6 characters");
@@ -109,13 +110,7 @@ const Auth = () => {
   };
 
   if (loading) {
-    return (
-      <div className="flex min-h-screen items-center justify-center gradient-calm">
-        <div className="animate-breathe">
-          <Leaf className="h-12 w-12 text-primary" />
-        </div>
-      </div>
-    );
+    return <FullPageLoading />;
   }
 
   return (

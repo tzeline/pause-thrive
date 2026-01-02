@@ -3,10 +3,11 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Leaf, ArrowLeft, Beaker, Plus, Sparkles } from "lucide-react";
+import { ArrowLeft, Beaker, Plus, Sparkles } from "lucide-react";
 import { ExperimentCard } from "@/components/ExperimentCard";
 import { experimentSuggestions } from "@/lib/microLearning";
 import { toast } from "sonner";
+import { FullPageLoading } from "@/components/LoadingSpinner";
 
 interface Experiment {
   id: string;
@@ -59,13 +60,7 @@ const Experiments = () => {
   };
 
   if (loading || !user) {
-    return (
-      <div className="flex min-h-screen items-center justify-center gradient-calm">
-        <div className="animate-breathe">
-          <Leaf className="h-12 w-12 text-primary" />
-        </div>
-      </div>
-    );
+    return <FullPageLoading />;
   }
 
   const activeExperiments = experiments.filter(e => e.status === "active");

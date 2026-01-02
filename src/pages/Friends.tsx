@@ -5,9 +5,10 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Leaf, ArrowLeft, Copy, Check, Heart, Trash2, Send } from "lucide-react";
+import { ArrowLeft, Copy, Check, Heart, Trash2, Send } from "lucide-react";
 import { toast } from "sonner";
 import { MessageReaction } from "@/components/MessageReaction";
+import { FullPageLoading } from "@/components/LoadingSpinner";
 
 interface FriendMessage {
   id: string;
@@ -125,7 +126,8 @@ const Friends = () => {
     setSubmitting(false);
 
     if (error) {
-      toast.error("Failed to send message. Please try again.");
+      console.error("Error sending message:", error);
+      toast.error("We couldn't send your message right now. Please try again.");
     } else {
       toast.success("Your message has been sent!");
       setFriendName("");
@@ -227,13 +229,7 @@ const Friends = () => {
 
   // Loading state
   if (loading || !user) {
-    return (
-      <div className="flex min-h-screen items-center justify-center gradient-calm">
-        <div className="animate-breathe">
-          <Leaf className="h-12 w-12 text-primary" />
-        </div>
-      </div>
-    );
+    return <FullPageLoading />;
   }
 
   // Main friends management view

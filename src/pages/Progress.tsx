@@ -3,7 +3,9 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Leaf, ArrowLeft, TrendingUp, Check, X, Minus } from "lucide-react";
+import { ArrowLeft, TrendingUp, Check, X, Minus } from "lucide-react";
+import { FullPageLoading } from "@/components/LoadingSpinner";
+import { ErrorMessage } from "@/components/ErrorMessage";
 
 interface Session { id: string; outcome: string | null; created_at: string; }
 
@@ -12,6 +14,7 @@ const Progress = () => {
   const navigate = useNavigate();
   const [sessions, setSessions] = useState<Session[]>([]);
   const [stats, setStats] = useState({ total: 0, resisted: 0, partial: 0, gaveIn: 0 });
+  const [loadError, setLoadError] = useState(false);
 
   useEffect(() => { if (!loading && !user) navigate("/auth"); }, [user, loading, navigate]);
 
@@ -19,20 +22,34 @@ const Progress = () => {
 
   const fetchSessions = async () => {
     if (!user) return;
-    const { data } = await supabase.from("emergency_sessions").select("id, outcome, created_at").eq("user_id", user.id).order("created_at", { ascending: false }).limit(50);
-    if (data) {
-      setSessions(data);
-      setStats({
-        total: data.length,
-        resisted: data.filter(s => s.outcome === "resisted").length,
-        partial: data.filter(s => s.outcome === "partially_resisted").length,
-        gaveIn: data.filter(s => s.outcome === "gave_in").length,
-      });
+    try {
+      setLoadError(false);
+      const { data, error } = await supabase
+        .from("emergency_sessions")
+        .select("id, outcome, created_at")
+        .eq("user_id", user.id)
+        .order("created_at", { ascending: false })
+        .limit(50);
+      
+      if (error) throw error;
+      
+      if (data) {
+        setSessions(data);
+        setStats({
+          total: data.length,
+          resisted: data.filter(s => s.outcome === "resisted").length,
+          partial: data.filter(s => s.outcome === "partially_resisted").length,
+          gaveIn: data.filter(s => s.outcome === "gave_in").length,
+        });
+      }
+    } catch (err) {
+      console.error("Error fetching sessions:", err);
+      setLoadError(true);
     }
   };
 
   if (loading || !user) {
-    return <div className="flex min-h-screen items-center justify-center gradient-calm"><div className="animate-breathe"><Leaf className="h-12 w-12 text-primary" /></div></div>;
+    return <FullPageLoading />;
   }
 
   return (
