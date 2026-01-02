@@ -6,6 +6,8 @@ import { Button } from "@/components/ui/button";
 import { Leaf, Wind, Target, Sparkles, Heart, ArrowRight, X, Check, Minus, Users } from "lucide-react";
 import { MicroLearningCard } from "@/components/MicroLearningCard";
 import { getRandomMicroLearning, MicroLearning } from "@/lib/microLearning";
+import { usePauseLimit } from "@/hooks/usePauseLimit";
+import { PauseLimitReached } from "@/components/PauseLimitReached";
 
 const STEPS = ["pause", "goal", "reappraisal", "friend_message", "alternative", "reflect"] as const;
 type Step = typeof STEPS[number];
@@ -27,6 +29,14 @@ const Emergency = () => {
   const [friendMessage, setFriendMessage] = useState<FriendMessage | null>(null);
   const [shownFriendMessageId, setShownFriendMessageId] = useState<string | null>(null);
   const [microLearning, setMicroLearning] = useState<MicroLearning | null>(null);
+  const [pauseConsumed, setPauseConsumed] = useState(false);
+  
+  const { 
+    hasReachedLimit, 
+    loading: pauseLoading, 
+    incrementPause, 
+    resetDate 
+  } = usePauseLimit(user?.id);
 
   useEffect(() => {
     if (!loading && !user) navigate("/auth");
@@ -87,6 +97,14 @@ const Emergency = () => {
         next = STEPS[currentIndex + 2];
       }
       
+      // Consume a pause when moving from the first step
+      if (step === "pause" && !pauseConsumed) {
+        const success = await incrementPause();
+        if (success) {
+          setPauseConsumed(true);
+        }
+      }
+      
       setStep(next);
       if (next === "reappraisal") generateReappraisal();
       if (next === "friend_message" && friendMessage) {
@@ -128,8 +146,13 @@ const Emergency = () => {
     navigate("/dashboard");
   };
 
-  if (loading || !user) {
+  if (loading || pauseLoading || !user) {
     return <div className="flex min-h-screen items-center justify-center gradient-calm"><div className="animate-breathe"><Leaf className="h-12 w-12 text-primary" /></div></div>;
+  }
+
+  // Show limit reached screen if user has hit their limit and hasn't consumed a pause yet
+  if (hasReachedLimit && !pauseConsumed) {
+    return <PauseLimitReached resetDate={resetDate} onClose={() => navigate("/dashboard")} />;
   }
 
   // Show micro-learning after completing the flow

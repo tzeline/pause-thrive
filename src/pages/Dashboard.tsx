@@ -7,6 +7,8 @@ import { Leaf, TrendingUp, LogOut, AlertCircle, Users, Sparkles, Beaker, Calenda
 import { PilotBanner } from "@/components/PilotBanner";
 import { MicroLearningCard } from "@/components/MicroLearningCard";
 import { getRandomMicroLearning, MicroLearning } from "@/lib/microLearning";
+import { usePauseLimit } from "@/hooks/usePauseLimit";
+import { PauseUsageIndicator } from "@/components/PauseUsageIndicator";
 
 interface Goal {
   id: string;
@@ -34,6 +36,8 @@ const Dashboard = () => {
   const [showPilotBanner, setShowPilotBanner] = useState(true);
   const [microLearning, setMicroLearning] = useState<MicroLearning | null>(null);
   const [activeExperiment, setActiveExperiment] = useState<ActiveExperiment | null>(null);
+  
+  const { pausesUsed, pausesRemaining, isSubscribed } = usePauseLimit(user?.id);
 
   useEffect(() => {
     if (!loading && !user) {
@@ -269,6 +273,15 @@ const Dashboard = () => {
               </div>
             </div>
           )}
+
+          {/* Pause Usage Indicator */}
+          <div className="w-full max-w-sm mb-4">
+            <PauseUsageIndicator 
+              pausesUsed={pausesUsed}
+              pausesRemaining={pausesRemaining}
+              isSubscribed={isSubscribed}
+            />
+          </div>
 
           {/* Emergency Button */}
           <div className="relative animate-float-up delay-100">
