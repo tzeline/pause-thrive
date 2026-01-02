@@ -14,6 +14,7 @@ import Friends from "./pages/Friends";
 import WeeklyInsight from "./pages/WeeklyInsight";
 import Experiments from "./pages/Experiments";
 import Goals from "./pages/Goals";
+import Subscribe from "./pages/Subscribe";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -36,6 +37,7 @@ const App = () => (
             <Route path="/weekly-insight" element={<WeeklyInsight />} />
             <Route path="/experiments" element={<Experiments />} />
             <Route path="/goals" element={<Goals />} />
+            <Route path="/subscribe" element={<Subscribe />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
