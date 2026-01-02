@@ -22,43 +22,47 @@ export function PilotBanner({ userId, onDismiss }: PilotBannerProps) {
     if (!feedback.trim()) return;
     setSubmitting(true);
     
-    const { error } = await supabase.from("pilot_feedback").insert({
-      user_id: userId,
-      feature: "general",
-      feedback_text: feedback.trim(),
-    });
+    try {
+      const { error } = await supabase.from("pilot_feedback").insert({
+        user_id: userId,
+        feature: "general",
+        feedback_text: feedback.trim(),
+      });
 
-    setSubmitting(false);
-    if (!error) {
-      toast.success("Thank you for your feedback!");
+      if (error) throw error;
+      
+      toast.success("Thank you! Your feedback helps shape this app.");
       setFeedback("");
       setShowFeedback(false);
       setDismissed(true);
       onDismiss?.();
-    } else {
-      toast.error("Failed to send feedback");
+    } catch (err) {
+      console.error("Error submitting feedback:", err);
+      toast.error("Couldn't send feedback right now. Please try again.");
+    } finally {
+      setSubmitting(false);
     }
   };
 
   return (
-    <div className="bg-accent/10 border border-accent/20 rounded-xl p-4 animate-float-up">
+    <div className="bg-primary/5 border border-primary/20 rounded-xl p-4 animate-float-up">
       <div className="flex items-start gap-3">
-        <div className="w-8 h-8 rounded-full bg-accent/20 flex items-center justify-center shrink-0">
-          <Sparkles className="h-4 w-4 text-accent" />
+        <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+          <Sparkles className="h-4 w-4 text-primary" />
         </div>
         <div className="flex-1 min-w-0">
-          <p className="text-sm text-foreground font-medium">Pilot Features Active</p>
+          <p className="text-sm text-foreground font-medium">You're part of the pilot</p>
           <p className="text-xs text-muted-foreground mt-1">
-            You're trying our new premium features. Your feedback shapes what we build next.
+            Thank you for testing early. Your experience helps us improve.
           </p>
           
           {showFeedback ? (
             <div className="mt-3 space-y-2">
               <Textarea
-                placeholder="What feels helpful? What feels unnecessary?"
+                placeholder="What's working? What feels off? All feedback is welcome."
                 value={feedback}
                 onChange={(e) => setFeedback(e.target.value)}
-                rows={2}
+                rows={3}
                 className="text-sm"
               />
               <div className="flex gap-2">
@@ -67,7 +71,7 @@ export function PilotBanner({ userId, onDismiss }: PilotBannerProps) {
                   onClick={handleSubmitFeedback}
                   disabled={!feedback.trim() || submitting}
                 >
-                  {submitting ? "Sending..." : "Send"}
+                  {submitting ? "Sending..." : "Send feedback"}
                 </Button>
                 <Button
                   variant="ghost"

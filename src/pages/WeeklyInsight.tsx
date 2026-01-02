@@ -3,7 +3,9 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Leaf, ArrowLeft, Calendar, TrendingUp, Sparkles, Target, Lightbulb } from "lucide-react";
+import { ArrowLeft, Calendar, TrendingUp, Sparkles, Target, Lightbulb } from "lucide-react";
+import { FullPageLoading } from "@/components/LoadingSpinner";
+import { ErrorMessage } from "@/components/ErrorMessage";
 
 interface Insight {
   id: string;
@@ -54,20 +56,14 @@ const WeeklyInsight = () => {
       }
     } catch (e) {
       console.error("Error fetching insight:", e);
-      setError("Unable to generate your weekly insight right now.");
+      setError("We couldn't prepare your insight right now. Your data is still safe.");
     } finally {
       setLoadingInsight(false);
     }
   };
 
   if (loading || !user) {
-    return (
-      <div className="flex min-h-screen items-center justify-center gradient-calm">
-        <div className="animate-breathe">
-          <Leaf className="h-12 w-12 text-primary" />
-        </div>
-      </div>
-    );
+    return <FullPageLoading />;
   }
 
   const formatDate = (dateStr: string) => {
