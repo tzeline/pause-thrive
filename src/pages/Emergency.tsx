@@ -53,24 +53,56 @@ const Emergency = () => {
 
   const fetchGoalAndPattern = async () => {
     if (!user) return;
-    const { data: goals } = await supabase.from("goals").select("id, title, why_it_matters").eq("user_id", user.id).eq("is_active", true).limit(1);
-    if (goals?.[0]) {
-      setGoal(goals[0]);
-      const { data: patterns } = await supabase.from("temptation_patterns").select("desired_alternative").eq("goal_id", goals[0].id).limit(1);
-      if (patterns?.[0]) setPattern(patterns[0]);
+    try {
+      const { data: goals, error: goalsError } = await supabase
+        .from("goals")
+        .select("id, title, why_it_matters")
+        .eq("user_id", user.id)
+        .eq("is_active", true)
+        .limit(1);
+      
+      if (goalsError) {
+        console.error("Failed to fetch goals:", goalsError);
+        return;
+      }
+      
+      if (goals?.[0]) {
+        setGoal(goals[0]);
+        try {
+          const { data: patterns } = await supabase
+            .from("temptation_patterns")
+            .select("desired_alternative")
+            .eq("goal_id", goals[0].id)
+            .limit(1);
+          if (patterns?.[0]) setPattern(patterns[0]);
+        } catch (patternErr) {
+          console.error("Failed to fetch patterns:", patternErr);
+        }
+      }
+    } catch (err) {
+      console.error("Error fetching goal data:", err);
     }
   };
 
   const fetchRandomFriendMessage = async () => {
     if (!user) return;
-    const { data: messages } = await supabase
-      .from("friend_messages")
-      .select("id, friend_name, message")
-      .eq("user_id", user.id);
-    
-    if (messages && messages.length > 0) {
-      const randomMsg = messages[Math.floor(Math.random() * messages.length)];
-      setFriendMessage(randomMsg);
+    try {
+      const { data: messages, error } = await supabase
+        .from("friend_messages")
+        .select("id, friend_name, message")
+        .eq("user_id", user.id);
+      
+      if (error) {
+        console.error("Failed to fetch friend messages:", error);
+        return;
+      }
+      
+      if (messages && messages.length > 0) {
+        const randomMsg = messages[Math.floor(Math.random() * messages.length)];
+        setFriendMessage(randomMsg);
+      }
+    } catch (err) {
+      console.error("Error fetching friend messages:", err);
     }
   };
 
@@ -100,13 +132,21 @@ const Emergency = () => {
       }
       
       // Consume a pause when moving from the first step
+      // Even if this fails, we still proceed - user experience takes priority
       if (step === "pause" && !pauseConsumed) {
-        const success = await incrementPause();
-        if (success) {
+        try {
+          const success = await incrementPause();
+          if (success) {
+            setPauseConsumed(true);
+          }
+        } catch (err) {
+          console.error("Failed to increment pause, proceeding anyway:", err);
+          // Mark as consumed so we don't retry - intervention is more important than tracking
           setPauseConsumed(true);
         }
       }
       
+      // Always proceed to next step
       setStep(next);
       if (next === "reappraisal") generateReappraisal();
       if (next === "friend_message" && friendMessage) {
@@ -116,27 +156,43 @@ const Emergency = () => {
   };
 
   const handleOutcome = async (outcome: "resisted" | "gave_in" | "partially_resisted") => {
-    if (!user || !goal) return;
-    await supabase.from("emergency_sessions").insert({ 
-      user_id: user.id, 
-      goal_id: goal.id, 
-      outcome, 
-      ai_reappraisal: reappraisal || null,
-      friend_message_shown: shownFriendMessageId,
-    });
+    if (!user) {
+      navigate("/dashboard");
+      return;
+    }
+    
+    // Save session - but don't block navigation if it fails
+    try {
+      const { error } = await supabase.from("emergency_sessions").insert({ 
+        user_id: user.id, 
+        goal_id: goal?.id || null, 
+        outcome, 
+        ai_reappraisal: reappraisal || null,
+        friend_message_shown: shownFriendMessageId,
+      });
+      if (error) {
+        console.error("Failed to save session:", error);
+      }
+    } catch (err) {
+      console.error("Error saving session:", err);
+    }
     
     // Show micro-learning after completing flow (50% chance)
     if (Math.random() > 0.5) {
-      const { data: viewedLearnings } = await supabase
-        .from("micro_learning_views")
-        .select("learning_id")
-        .eq("user_id", user.id);
-      
-      const viewedIds = viewedLearnings?.map(v => v.learning_id) || [];
-      const learning = getRandomMicroLearning(viewedIds);
-      if (learning) {
-        setMicroLearning(learning);
-        return; // Don't navigate yet
+      try {
+        const { data: viewedLearnings } = await supabase
+          .from("micro_learning_views")
+          .select("learning_id")
+          .eq("user_id", user.id);
+        
+        const viewedIds = viewedLearnings?.map(v => v.learning_id) || [];
+        const learning = getRandomMicroLearning(viewedIds);
+        if (learning) {
+          setMicroLearning(learning);
+          return; // Don't navigate yet
+        }
+      } catch (err) {
+        console.error("Error fetching micro-learning:", err);
       }
     }
     

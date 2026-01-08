@@ -29,8 +29,6 @@ interface ActiveExperiment {
   title: string;
 }
 
-<p>{goal?.title}</p>;
-
 const Dashboard = () => {
   const { user, loading, signOut } = useAuth();
   const navigate = useNavigate();
