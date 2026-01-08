@@ -105,7 +105,7 @@ const Goals = () => {
   };
 
   const handleSave = async () => {
-    if (!user || !goal) return;
+    if (!user) return;
 
     if (!goalTitle.trim()) {
       toast({
@@ -119,36 +119,67 @@ const Goals = () => {
     setIsSaving(true);
 
     try {
-      // Update goal
-      const { error: goalError } = await supabase
-        .from("goals")
-        .update({
-          title: goalTitle,
-          why_it_matters: whyItMatters || null,
-          time_horizon: timeHorizon || null,
-        })
-        .eq("id", goal.id);
-
-      if (goalError) throw goalError;
-
-      // Update pattern if exists
-      if (pattern && triggerDescription && temptationBehavior && desiredAlternative) {
-        const { error: patternError } = await supabase
-          .from("temptation_patterns")
+      if (goal) {
+        // Update existing goal
+        const { error: goalError } = await supabase
+          .from("goals")
           .update({
-            trigger_description: triggerDescription,
-            temptation_behavior: temptationBehavior,
-            desired_alternative: desiredAlternative,
+            title: goalTitle,
+            why_it_matters: whyItMatters || null,
+            time_horizon: timeHorizon || null,
           })
-          .eq("id", pattern.id);
+          .eq("id", goal.id);
 
-        if (patternError) throw patternError;
+        if (goalError) throw goalError;
+
+        // Update pattern if exists
+        if (pattern && triggerDescription && temptationBehavior && desiredAlternative) {
+          const { error: patternError } = await supabase
+            .from("temptation_patterns")
+            .update({
+              trigger_description: triggerDescription,
+              temptation_behavior: temptationBehavior,
+              desired_alternative: desiredAlternative,
+            })
+            .eq("id", pattern.id);
+
+          if (patternError) throw patternError;
+        }
+
+        toast({
+          title: "Changes saved",
+          description: "Your goal has been updated.",
+        });
+      } else {
+        // Create new goal
+        const { data: newGoal, error: goalError } = await supabase
+          .from("goals")
+          .insert({
+            user_id: user.id,
+            title: goalTitle,
+            why_it_matters: whyItMatters || null,
+            time_horizon: timeHorizon || null,
+            is_active: true,
+          })
+          .select()
+          .single();
+
+        if (goalError) throw goalError;
+
+        // Mark onboarding as completed if not already
+        await supabase
+          .from("profiles")
+          .update({ onboarding_completed: true })
+          .eq("id", user.id);
+
+        setGoal(newGoal);
+
+        toast({
+          title: "Goal created",
+          description: "Your new goal has been saved.",
+        });
       }
 
-      toast({
-        title: "Changes saved",
-        description: "Your goal has been updated.",
-      });
       navigate("/dashboard");
     } catch (error: any) {
       console.error("Error saving goal:", error);
@@ -163,7 +194,7 @@ const Goals = () => {
   };
 
   const handleReset = async () => {
-    if (!user || !goal) return;
+    if (!user) return;
 
     setIsSaving(true);
 
@@ -319,7 +350,7 @@ const Goals = () => {
               disabled={isSaving}
             >
               <Save className="h-4 w-4 mr-2" />
-              {isSaving ? "Saving..." : "Save Changes"}
+              {isSaving ? "Saving..." : goal ? "Save Changes" : "Create Goal"}
             </Button>
 
             <AlertDialog>
