@@ -20,31 +20,47 @@ export function usePauseLimit(userId: string | undefined): PauseUsage {
   const [loading, setLoading] = useState(true);
 
   const fetchUsageAndSubscription = useCallback(async () => {
-    if (!userId) return;
+    if (!userId) {
+      setLoading(false);
+      return;
+    }
     
     setLoading(true);
     
-    // Fetch subscription status
-    const { data: subscription } = await supabase
-      .from("subscriptions")
-      .select("status")
-      .eq("user_id", userId)
-      .maybeSingle();
-    
-    const subscribed = subscription?.status === "active";
-    setIsSubscribed(subscribed);
-    
-    // Fetch today's pause usage
-    const today = new Date().toISOString().split("T")[0];
-    const { data: usage } = await supabase
-      .from("pause_usage")
-      .select("pause_count")
-      .eq("user_id", userId)
-      .eq("usage_date", today)
-      .maybeSingle();
-    
-    setPausesUsed(usage?.pause_count || 0);
-    setLoading(false);
+    try {
+      // Fetch subscription status
+      const { data: subscription, error: subError } = await supabase
+        .from("subscriptions")
+        .select("status")
+        .eq("user_id", userId)
+        .maybeSingle();
+      
+      if (subError) {
+        console.error("Failed to fetch subscription:", subError);
+      }
+      
+      const subscribed = subscription?.status === "active";
+      setIsSubscribed(subscribed);
+      
+      // Fetch today's pause usage
+      const today = new Date().toISOString().split("T")[0];
+      const { data: usage, error: usageError } = await supabase
+        .from("pause_usage")
+        .select("pause_count")
+        .eq("user_id", userId)
+        .eq("usage_date", today)
+        .maybeSingle();
+      
+      if (usageError) {
+        console.error("Failed to fetch pause usage:", usageError);
+      }
+      
+      setPausesUsed(usage?.pause_count || 0);
+    } catch (err) {
+      console.error("Error fetching usage data:", err);
+    } finally {
+      setLoading(false);
+    }
   }, [userId]);
 
   useEffect(() => {
@@ -62,23 +78,31 @@ export function usePauseLimit(userId: string | undefined): PauseUsage {
     
     const today = new Date().toISOString().split("T")[0];
     
-    // Upsert the pause usage
-    const { error } = await supabase
-      .from("pause_usage")
-      .upsert({
-        user_id: userId,
-        usage_date: today,
-        pause_count: pausesUsed + 1,
-      }, {
-        onConflict: "user_id,usage_date",
-      });
-    
-    if (!error) {
+    try {
+      // Upsert the pause usage
+      const { error } = await supabase
+        .from("pause_usage")
+        .upsert({
+          user_id: userId,
+          usage_date: today,
+          pause_count: pausesUsed + 1,
+        }, {
+          onConflict: "user_id,usage_date",
+        });
+      
+      if (error) {
+        console.error("Failed to increment pause:", error);
+        // Return true anyway - don't block user experience due to tracking failure
+        return true;
+      }
+      
       setPausesUsed(prev => prev + 1);
       return true;
+    } catch (err) {
+      console.error("Error incrementing pause:", err);
+      // Return true - intervention is more important than accurate tracking
+      return true;
     }
-    
-    return false;
   }, [userId, isSubscribed, pausesUsed]);
 
   // Calculate reset date (tomorrow at midnight)
