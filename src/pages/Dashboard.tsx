@@ -226,8 +226,8 @@ const Dashboard = () => {
 
         {/* Main Content */}
         <div className="flex-1 flex flex-col items-center justify-center">
-          {/* Goal Reminder */}
-          {goal && (
+          {/* Goal Reminder or Add Goal prompt */}
+          {goal ? (
             <div
               className="w-full max-w-sm mb-8 animate-float-up cursor-pointer group"
               onClick={() => navigate("/goals")}
@@ -243,6 +243,18 @@ const Dashboard = () => {
                 {goal.why_it_matters && (
                   <p className="text-sm text-muted-foreground mt-2 italic">"{goal.why_it_matters}"</p>
                 )}
+              </div>
+            </div>
+          ) : (
+            <div
+              className="w-full max-w-sm mb-8 animate-float-up cursor-pointer group"
+              onClick={() => navigate("/goals")}
+            >
+              <div className="p-5 rounded-2xl bg-card border border-dashed border-primary/30 shadow-soft group-hover:border-primary/50 transition-colors text-center">
+                <p className="text-sm text-muted-foreground mb-1">No goal set yet</p>
+                <p className="font-display text-lg text-primary group-hover:text-primary/80 transition-colors">
+                  + Add your first goal
+                </p>
               </div>
             </div>
           )}
