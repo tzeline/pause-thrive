@@ -29,6 +29,8 @@ interface ActiveExperiment {
   title: string;
 }
 
+<p>{goal?.title}</p>;
+
 const Dashboard = () => {
   const { user, loading, signOut } = useAuth();
   const navigate = useNavigate();
@@ -38,7 +40,7 @@ const Dashboard = () => {
   const [showPilotBanner, setShowPilotBanner] = useState(true);
   const [microLearning, setMicroLearning] = useState<MicroLearning | null>(null);
   const [activeExperiment, setActiveExperiment] = useState<ActiveExperiment | null>(null);
-  
+
   const { pausesUsed, pausesRemaining, isSubscribed } = usePauseLimit(user?.id);
 
   useEffect(() => {
@@ -91,18 +93,22 @@ const Dashboard = () => {
       .order("created_at", { ascending: false });
 
     if (sessions) {
-      const resistedCount = sessions.filter(s => s.outcome === "resisted" || s.outcome === "partially_resisted").length;
-      
+      const resistedCount = sessions.filter(
+        (s) => s.outcome === "resisted" || s.outcome === "partially_resisted",
+      ).length;
+
       // Calculate streak (days with at least one session)
       let streak = 0;
       const today = new Date();
       today.setHours(0, 0, 0, 0);
-      
-      const sessionDates = new Set(sessions.map(s => {
-        const date = new Date(s.created_at);
-        date.setHours(0, 0, 0, 0);
-        return date.getTime();
-      }));
+
+      const sessionDates = new Set(
+        sessions.map((s) => {
+          const date = new Date(s.created_at);
+          date.setHours(0, 0, 0, 0);
+          return date.getTime();
+        }),
+      );
 
       for (let i = 0; i < 365; i++) {
         const checkDate = new Date(today);
@@ -139,7 +145,7 @@ const Dashboard = () => {
       .select("learning_id")
       .eq("user_id", user.id);
 
-    const viewedIds = viewedLearnings?.map(v => v.learning_id) || [];
+    const viewedIds = viewedLearnings?.map((v) => v.learning_id) || [];
     // Show micro-learning occasionally (50% chance if not all viewed)
     if (Math.random() > 0.5) {
       const learning = getRandomMicroLearning(viewedIds);
@@ -171,42 +177,19 @@ const Dashboard = () => {
             </div>
           </div>
           <div className="flex items-center gap-1">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => navigate("/weekly-insight")}
-              title="Weekly Insight"
-            >
+            <Button variant="ghost" size="icon" onClick={() => navigate("/weekly-insight")} title="Weekly Insight">
               <Calendar className="h-5 w-5" />
             </Button>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => navigate("/experiments")}
-              title="Experiments"
-            >
+            <Button variant="ghost" size="icon" onClick={() => navigate("/experiments")} title="Experiments">
               <Beaker className="h-5 w-5" />
             </Button>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => navigate("/friends")}
-              title="Friend Support"
-            >
+            <Button variant="ghost" size="icon" onClick={() => navigate("/friends")} title="Friend Support">
               <Users className="h-5 w-5" />
             </Button>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => navigate("/progress")}
-            >
+            <Button variant="ghost" size="icon" onClick={() => navigate("/progress")}>
               <TrendingUp className="h-5 w-5" />
             </Button>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={handleSignOut}
-            >
+            <Button variant="ghost" size="icon" onClick={handleSignOut}>
               <LogOut className="h-5 w-5" />
             </Button>
           </div>
@@ -221,7 +204,7 @@ const Dashboard = () => {
 
         {/* Active Experiment Reminder */}
         {activeExperiment && (
-          <div 
+          <div
             className="mb-6 max-w-md mx-auto w-full p-4 rounded-xl bg-primary/5 border border-primary/20 cursor-pointer hover:bg-primary/10 transition-colors animate-float-up"
             onClick={() => navigate("/experiments")}
           >
@@ -239,11 +222,7 @@ const Dashboard = () => {
         {/* Micro-Learning Card */}
         {microLearning && (
           <div className="mb-6 max-w-md mx-auto w-full">
-            <MicroLearningCard
-              learning={microLearning}
-              userId={user.id}
-              onDismiss={() => setMicroLearning(null)}
-            />
+            <MicroLearningCard learning={microLearning} userId={user.id} onDismiss={() => setMicroLearning(null)} />
           </div>
         )}
 
@@ -251,20 +230,20 @@ const Dashboard = () => {
         <div className="flex-1 flex flex-col items-center justify-center">
           {/* Goal Reminder */}
           {goal && (
-            <div 
+            <div
               className="w-full max-w-sm mb-8 animate-float-up cursor-pointer group"
               onClick={() => navigate("/goals")}
             >
               <div className="p-5 rounded-2xl bg-card border border-border/50 shadow-soft group-hover:border-primary/30 transition-colors">
                 <div className="flex items-center justify-between mb-2">
                   <p className="text-sm text-muted-foreground">Your goal:</p>
-                  <p className="text-xs text-muted-foreground group-hover:text-primary transition-colors">Tap to edit</p>
+                  <p className="text-xs text-muted-foreground group-hover:text-primary transition-colors">
+                    Tap to edit
+                  </p>
                 </div>
                 <p className="font-display text-xl text-foreground">{goal.title}</p>
                 {goal.why_it_matters && (
-                  <p className="text-sm text-muted-foreground mt-2 italic">
-                    "{goal.why_it_matters}"
-                  </p>
+                  <p className="text-sm text-muted-foreground mt-2 italic">"{goal.why_it_matters}"</p>
                 )}
               </div>
             </div>
@@ -272,7 +251,7 @@ const Dashboard = () => {
 
           {/* Pause Usage Indicator */}
           <div className="w-full max-w-sm mb-4">
-            <PauseUsageIndicator 
+            <PauseUsageIndicator
               pausesUsed={pausesUsed}
               pausesRemaining={pausesRemaining}
               isSubscribed={isSubscribed}
@@ -282,8 +261,11 @@ const Dashboard = () => {
           {/* Emergency Button */}
           <div className="relative animate-float-up delay-100">
             {/* Ripple effect background */}
-            <div className="absolute inset-0 rounded-full gradient-emergency opacity-30 animate-breathe" style={{ transform: "scale(1.2)" }} />
-            
+            <div
+              className="absolute inset-0 rounded-full gradient-emergency opacity-30 animate-breathe"
+              style={{ transform: "scale(1.2)" }}
+            />
+
             <Button
               variant="emergency"
               size="emergency"
@@ -310,7 +292,7 @@ const Dashboard = () => {
         </div>
 
         {/* Weekly Insight Prompt */}
-        <div 
+        <div
           className="text-center py-4 animate-float-up delay-400 cursor-pointer"
           onClick={() => navigate("/weekly-insight")}
         >
@@ -322,9 +304,7 @@ const Dashboard = () => {
 
         {/* Encouraging Message */}
         <div className="text-center pb-2 animate-float-up delay-400">
-          <p className="text-sm text-muted-foreground italic">
-            "Every pause is a step forward."
-          </p>
+          <p className="text-sm text-muted-foreground italic">"Every pause is a step forward."</p>
         </div>
 
         {/* Safety Footer */}
