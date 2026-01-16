@@ -4,4 +4,4 @@ project_id = "lvpzomyzsfraepjimsrb"
 verify_jwt = false
 
 [functions.generate-weekly-insight]
-verify_jwt = true
+verify_jwt = false
