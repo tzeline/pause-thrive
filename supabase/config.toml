@@ -5,3 +5,6 @@ verify_jwt = false
 
 [functions.generate-weekly-insight]
 verify_jwt = false
+
+[functions.generate-pause-coaching]
+verify_jwt = false
