@@ -13,6 +13,7 @@ import { FullPageLoading } from "@/components/LoadingSpinner";
 interface FriendMessage {
   id: string;
   friend_name: string;
+  friend_email: string | null;
   message: string;
   created_at: string;
 }
@@ -31,6 +32,7 @@ const Friends = () => {
   const [isSubmitMode, setIsSubmitMode] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [friendName, setFriendName] = useState("");
+  const [friendEmail, setFriendEmail] = useState("");
   const [friendMessage, setFriendMessage] = useState("");
   const [targetUserId, setTargetUserId] = useState<string | null>(null);
   const [targetUserName, setTargetUserName] = useState<string>("");
@@ -120,6 +122,7 @@ const Friends = () => {
     const { error } = await supabase.from("friend_messages").insert({
       user_id: targetUserId,
       friend_name: friendName.trim(),
+      friend_email: friendEmail.trim() || null,
       message: friendMessage.trim(),
     });
 
@@ -131,6 +134,7 @@ const Friends = () => {
     } else {
       toast.success("Your message has been sent!");
       setFriendName("");
+      setFriendEmail("");
       setFriendMessage("");
     }
   };
@@ -183,6 +187,21 @@ const Friends = () => {
                 value={friendName}
                 onChange={(e) => setFriendName(e.target.value)}
               />
+            </div>
+
+            <div>
+              <label className="text-sm font-medium text-foreground mb-2 block">
+                Your email <span className="text-muted-foreground font-normal">(optional)</span>
+              </label>
+              <Input
+                type="email"
+                placeholder="e.g. sarah@email.com"
+                value={friendEmail}
+                onChange={(e) => setFriendEmail(e.target.value)}
+              />
+              <p className="text-xs text-muted-foreground mt-1">
+                We'll notify you if your friend thanks you for your message.
+              </p>
             </div>
 
             <div>
@@ -314,6 +333,7 @@ const Friends = () => {
                         messageId={msg.id}
                         userId={user.id}
                         friendName={msg.friend_name}
+                        hasFriendEmail={!!msg.friend_email}
                         hasReacted={reactions.has(msg.id)}
                         onReact={() => setReactions(new Set([...reactions, msg.id]))}
                       />

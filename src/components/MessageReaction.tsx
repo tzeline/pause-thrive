@@ -9,15 +9,35 @@ interface MessageReactionProps {
   messageId: string;
   userId: string;
   friendName: string;
+  hasFriendEmail?: boolean;
   hasReacted?: boolean;
   onReact?: () => void;
 }
 
-export function MessageReaction({ messageId, userId, friendName, hasReacted, onReact }: MessageReactionProps) {
+export function MessageReaction({ messageId, userId, friendName, hasFriendEmail, hasReacted, onReact }: MessageReactionProps) {
   const [showAppreciation, setShowAppreciation] = useState(false);
   const [appreciation, setAppreciation] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [reacted, setReacted] = useState(hasReacted);
+
+  const sendThankYouEmail = async (appreciationMessage?: string) => {
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) return;
+
+      const response = await supabase.functions.invoke("send-thank-you-email", {
+        body: { messageId, appreciationMessage },
+      });
+
+      if (response.error) {
+        console.error("Error sending thank you email:", response.error);
+      } else if (response.data?.emailSent) {
+        console.log("Thank you email sent successfully");
+      }
+    } catch (error) {
+      console.error("Failed to send thank you email:", error);
+    }
+  };
 
   const handleQuickReact = async (type: "thank_you" | "heart") => {
     setSubmitting(true);
@@ -25,14 +45,23 @@ export function MessageReaction({ messageId, userId, friendName, hasReacted, onR
       message_id: messageId,
       user_id: userId,
       reaction_type: type,
-      notify_friend: false,
+      notify_friend: hasFriendEmail || false,
     });
-    setSubmitting(false);
+    
     if (!error) {
       setReacted(true);
-      toast.success(type === "thank_you" ? "Thank you sent!" : "Heart sent!");
+      
+      // Send email notification if friend provided email
+      if (hasFriendEmail) {
+        await sendThankYouEmail();
+        toast.success(`${friendName} will receive your thanks by email!`);
+      } else {
+        toast.success(type === "thank_you" ? "Thank you sent!" : "Heart sent!");
+      }
+      
       onReact?.();
     }
+    setSubmitting(false);
   };
 
   const handleSendAppreciation = async () => {
@@ -43,16 +72,25 @@ export function MessageReaction({ messageId, userId, friendName, hasReacted, onR
       user_id: userId,
       reaction_type: "thank_you",
       appreciation_message: appreciation.trim(),
-      notify_friend: true,
+      notify_friend: hasFriendEmail || false,
     });
-    setSubmitting(false);
+    
     if (!error) {
       setReacted(true);
-      toast.success(`Your message to ${friendName} has been noted!`);
+      
+      // Send email notification if friend provided email
+      if (hasFriendEmail) {
+        await sendThankYouEmail(appreciation.trim());
+        toast.success(`Your personal message to ${friendName} has been sent!`);
+      } else {
+        toast.success(`Your message to ${friendName} has been noted!`);
+      }
+      
       setShowAppreciation(false);
       setAppreciation("");
       onReact?.();
     }
+    setSubmitting(false);
   };
 
   if (reacted) {
