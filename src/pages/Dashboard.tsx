@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Leaf, TrendingUp, LogOut, AlertCircle, Users, Sparkles, Beaker, Calendar } from "lucide-react";
+import { Leaf, TrendingUp, LogOut, AlertCircle, Users, Sparkles, Beaker, Calendar, HelpCircle } from "lucide-react";
 import { PilotBanner } from "@/components/PilotBanner";
 import { MicroLearningCard } from "@/components/MicroLearningCard";
 import { getRandomMicroLearning, MicroLearning } from "@/lib/microLearning";
@@ -11,6 +11,7 @@ import { usePauseLimit } from "@/hooks/usePauseLimit";
 import { PauseUsageIndicator } from "@/components/PauseUsageIndicator";
 import { SafetyFooter } from "@/components/SafetyFooter";
 import { FullPageLoading } from "@/components/LoadingSpinner";
+import { DashboardTour, hasSeenDashboardTour } from "@/components/DashboardTour";
 
 interface Goal {
   id: string;
@@ -38,6 +39,7 @@ const Dashboard = () => {
   const [showPilotBanner, setShowPilotBanner] = useState(true);
   const [microLearning, setMicroLearning] = useState<MicroLearning | null>(null);
   const [activeExperiment, setActiveExperiment] = useState<ActiveExperiment | null>(null);
+  const [showTour, setShowTour] = useState(false);
 
   const { pausesUsed, pausesRemaining, isSubscribed } = usePauseLimit(user?.id);
 
@@ -68,6 +70,10 @@ const Dashboard = () => {
       if (!profile.onboarding_completed) {
         navigate("/onboarding");
         return;
+      }
+      // Show the dashboard tour on first visit after onboarding
+      if (!hasSeenDashboardTour()) {
+        setShowTour(true);
       }
     }
 
@@ -175,6 +181,9 @@ const Dashboard = () => {
             </div>
           </div>
           <div className="flex items-center gap-1">
+            <Button variant="ghost" size="icon" onClick={() => setShowTour(true)} title="Take the tour">
+              <HelpCircle className="h-5 w-5" />
+            </Button>
             <Button variant="ghost" size="icon" onClick={() => navigate("/weekly-insight")} title="Weekly Insight">
               <Calendar className="h-5 w-5" />
             </Button>
@@ -320,6 +329,7 @@ const Dashboard = () => {
         {/* Safety Footer */}
         <SafetyFooter className="pb-4 pt-2" />
       </div>
+      <DashboardTour open={showTour} onClose={() => setShowTour(false)} />
     </div>
   );
 };
