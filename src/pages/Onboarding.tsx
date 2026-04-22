@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { Target, Lightbulb, ArrowRight, Check } from "lucide-react";
+import { Target, Lightbulb, ArrowRight, Check, Sparkles, ShieldAlert } from "lucide-react";
 import { FullPageLoading } from "@/components/LoadingSpinner";
 import { SafetyFooter } from "@/components/SafetyFooter";
 
