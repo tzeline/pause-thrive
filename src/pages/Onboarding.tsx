@@ -125,10 +125,56 @@ const Onboarding = () => {
           <div className={`w-3 h-3 rounded-full transition-colors ${step >= 1 ? "bg-primary" : "bg-muted"}`} />
           <div className="w-8 h-0.5 bg-muted" />
           <div className={`w-3 h-3 rounded-full transition-colors ${step >= 2 ? "bg-primary" : "bg-muted"}`} />
+          <div className="w-8 h-0.5 bg-muted" />
+          <div className={`w-3 h-3 rounded-full transition-colors ${step >= 3 ? "bg-primary" : "bg-muted"}`} />
         </div>
 
         <div className="flex-1 flex flex-col justify-center max-w-md mx-auto w-full">
           {step === 1 && (
+            <div className="space-y-8 animate-float-up">
+              <div className="text-center">
+                <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-primary/10 mb-4">
+                  <Sparkles className="h-8 w-8 text-primary" />
+                </div>
+                <h1 className="font-display text-3xl text-foreground mb-3">
+                  Welcome to Inner Compass
+                </h1>
+                <p className="text-muted-foreground leading-relaxed">
+                  We help you pause in moments of temptation, so you can stay aligned with what matters most to you.
+                </p>
+              </div>
+
+              <div className="p-5 rounded-xl bg-highlight/5 border border-highlight/20 space-y-3">
+                <div className="flex items-start gap-3">
+                  <ShieldAlert className="h-5 w-5 text-highlight shrink-0 mt-0.5" />
+                  <div>
+                    <p className="font-medium text-foreground mb-1">A quick tip about goals</p>
+                    <p className="text-sm text-muted-foreground leading-relaxed">
+                      This app works best with <strong className="text-foreground">restriction-based goals</strong> — things you want to <em>stop or reduce</em> doing — rather than achievement goals.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 gap-2 pt-2">
+                  <div className="text-sm p-3 rounded-lg bg-background/60 border border-border">
+                    <p className="text-xs text-muted-foreground mb-1">✅ Works well</p>
+                    <p className="text-foreground">"Stop scrolling social media at night"</p>
+                  </div>
+                  <div className="text-sm p-3 rounded-lg bg-background/60 border border-border">
+                    <p className="text-xs text-muted-foreground mb-1">⚠️ Less effective</p>
+                    <p className="text-foreground">"Run a marathon"</p>
+                  </div>
+                </div>
+              </div>
+
+              <Button size="lg" className="w-full" onClick={() => setStep(2)}>
+                Let's begin
+                <ArrowRight className="h-4 w-4 ml-2" />
+              </Button>
+            </div>
+          )}
+
+          {step === 2 && (
             <div className="space-y-8 animate-float-up">
               {/* Header */}
               <div className="text-center">
@@ -139,19 +185,23 @@ const Onboarding = () => {
                   Define Your Goal
                 </h1>
                 <p className="text-muted-foreground">
-                  What meaningful goal are you working toward?
+                  What habit or behavior do you want to restrict?
                 </p>
+              </div>
+
+              <div className="p-3 rounded-lg bg-muted/50 border border-border text-xs text-muted-foreground leading-relaxed">
+                💡 Frame your goal as something you want to <strong className="text-foreground">stop or reduce</strong> — like "stop snacking late at night" rather than "lose weight."
               </div>
 
               {/* Form */}
               <div className="space-y-5">
                 <div className="space-y-2">
                   <Label htmlFor="goal" className="text-foreground">
-                    My goal is to...
+                    I want to stop / reduce...
                   </Label>
                   <Input
                     id="goal"
-                    placeholder="e.g., Exercise regularly, eat healthier..."
+                    placeholder="e.g., Stop scrolling at night, reduce sugar..."
                     value={goalTitle}
                     onChange={(e) => setGoalTitle(e.target.value)}
                   />
@@ -183,19 +233,20 @@ const Onboarding = () => {
                   />
                 </div>
 
-                <Button
-                  size="lg"
-                  className="w-full mt-4"
-                  onClick={handleGoalSubmit}
-                >
-                  Continue
-                  <ArrowRight className="h-4 w-4 ml-2" />
-                </Button>
+                <div className="flex gap-3 mt-4">
+                  <Button variant="calm" size="lg" className="flex-1" onClick={() => setStep(1)}>
+                    Back
+                  </Button>
+                  <Button size="lg" className="flex-1" onClick={handleGoalSubmit}>
+                    Continue
+                    <ArrowRight className="h-4 w-4 ml-2" />
+                  </Button>
+                </div>
               </div>
             </div>
           )}
 
-          {step === 2 && (
+          {step === 3 && (
             <div className="space-y-8 animate-float-up">
               {/* Header */}
               <div className="text-center">
@@ -259,7 +310,7 @@ const Onboarding = () => {
                     variant="calm"
                     size="lg"
                     className="flex-1"
-                    onClick={() => setStep(1)}
+                    onClick={() => setStep(2)}
                     disabled={isSubmitting}
                   >
                     Back
