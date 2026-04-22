@@ -44,7 +44,7 @@ const Onboarding = () => {
       });
       return;
     }
-    setStep(2);
+    setStep(3);
   };
 
   const handlePatternSubmit = async () => {
