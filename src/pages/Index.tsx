@@ -60,6 +60,15 @@ const Index = () => {
 
           {/* Safety Footer */}
           <SafetyFooter className="pt-8" />
+
+          {/* Legal Links */}
+          <div className="flex items-center justify-center gap-4 pt-2 flex-wrap">
+            <button onClick={() => navigate("/privacy")} className="text-xs text-muted-foreground/60 hover:text-muted-foreground transition-colors">Privacy Policy</button>
+            <span className="text-muted-foreground/30 text-xs">·</span>
+            <button onClick={() => navigate("/terms")} className="text-xs text-muted-foreground/60 hover:text-muted-foreground transition-colors">Terms &amp; Conditions</button>
+            <span className="text-muted-foreground/30 text-xs">·</span>
+            <button onClick={() => navigate("/contact")} className="text-xs text-muted-foreground/60 hover:text-muted-foreground transition-colors">Contact</button>
+          </div>
         </div>
       </div>
 
